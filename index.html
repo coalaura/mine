@@ -3,13 +3,31 @@
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta name="color-scheme" content="dark" />
+		<meta name="theme-color" content="#101214" />
 
 		<link rel="stylesheet" href="mine.css" />
 
 		<title>Minesweeper</title>
 	</head>
 	<body>
-		<canvas id="game" style="margin: auto; display: block;height: 500px"></canvas>
+		<main class="game-window" aria-label="Minesweeper">
+			<header class="game-header">
+				<h1>minesweeper<span class="title-dot" aria-hidden="true">.</span></h1>
+
+				<span class="mine-count" aria-label="99 mines" title="99 mines">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+						<circle cx="12" cy="12" r="5" />
+						<path d="M12 3v4m0 10v4M3 12h4m10 0h4M5.6 5.6l2.9 2.9m7 7 2.9 2.9M5.6 18.4l2.9-2.9m7-7 2.9-2.9" />
+					</svg>
+					99
+				</span>
+			</header>
+
+			<div class="game-board">
+				<canvas id="game" aria-label="Minesweeper board. Left-click to reveal a cell, right-click to flag. Click after a game ends to restart.">Your browser needs canvas support to play Minesweeper.</canvas>
+			</div>
+		</main>
 
 		<script src="mine.js"></script>
 	</body>

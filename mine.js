@@ -2,7 +2,7 @@
 	// Contains all the pixel art for the game
 	const SPRITE = new Image();
 
-	SPRITE.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHAAAAAgBAMAAAA4QOGPAAAAJFBMVEW9vb0AAAB3eXvmLi7///8AgID/iAD8AwCBAAAAfwR9AH8AAfzYbQlCAAAA60lEQVQ4y9XTvQ2DMBCG4YOG1icyARtYXoBIWSErpE7nFbKCV8gKLJez7yxwSA4ENLzNV6BHMn9wroYhTQghrfceuDfEXlTcOxUXqZ0QImQr69kJBI5U7igYgjBx41EZUtkdA5kxTZACLklSR0OqfB3zo4rbDE/ejevzguSkJVjnnUDbMqzMT8jT5VVgR8V9UAVsnlNoHaJrHVSACEaDjS8gOZJu8j92cplUAf0XvFwZ0uqwKaGNIB41rll/jxZTbcVrNAhmAY6XFehI8lHZaRBRearKUZHaC+cfwOZPbl7fcbLrYS0g77/f6gN/OIYlP384IAAAAABJRU5ErkJggg==";
+	SPRITE.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHAAAAAgBAMAAAA4QOGPAAAAJFBMVEUnLTPj5+kXHCGPNUU8REx7yMLmt37yi4LloKCRx6O5oOWKtO2oFlq6AAAA60lEQVQ4y9XTvQ2DMBCG4YOG1icyARtYXoBIWSErpE7nFbKCV8gKLJez7yxwSA4ENLzNV6BHMn9wroYhTQghrfceuDfEXlTcOxUXqZ0QImQr69kJBI5U7igYgjBx41EZUtkdA5kxTZACLklSR0OqfB3zo4rbDE/ejevzguSkJVjnnUDbMqzMT8jT5VVgR8V9UAVsnlNoHaJrHVSACEaDjS8gOZJu8j92cplUAf0XvFwZ0uqwKaGNIB41rll/jxZTbcVrNAhmAY6XFehI8lHZaRBRearKUZHaC+cfwOZPbl7fcbLrYS0g77/f6gN/OIYlP384IAAAAABJRU5ErkJggg==";
 
 	const TILE = 16;
 
@@ -62,7 +62,7 @@
 
 		if (outline) {
 			pCtx.lineWidth = Math.floor(pSize / TILE);
-			pCtx.strokeStyle = "#77797B";
+			pCtx.strokeStyle = "#171c21";
 
 			pCtx.strokeRect(pX - 1, pY - 1, pSize + 2, pSize + 2);
 		}
@@ -493,7 +493,7 @@
 					y = scale * 4;
 
 				// Darken background
-				this.ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
+				this.ctx.fillStyle = "rgba(10, 14, 17, 0.65)";
 				this.ctx.fillRect(0, 0, width, height);
 
 				// Text shadow
@@ -545,7 +545,7 @@
 					const sX = this.hoveredX * TILE * scale,
 						sY = this.hoveredY * TILE * scale;
 
-					this.ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
+					this.ctx.fillStyle = "rgba(200, 223, 212, 0.1)";
 
 					this.ctx.fillRect(sX, sY, TILE * scale, TILE * scale);
 				}
