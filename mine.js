@@ -301,6 +301,17 @@
 
 			this._events = true;
 
+			document.querySelector(".new-game-button").addEventListener("click", () => {
+				const active = this.started && !this.gameOver && !this.gameWon;
+
+				if (active && !window.confirm("Start a new game? Your current progress will be lost.")) {
+					return;
+				}
+
+				this.restart();
+				this.target.focus({ preventScroll: true });
+			});
+
 			this.result.addEventListener("click", (event) => {
 				if (event.target.closest("details")) {
 					return;
@@ -594,10 +605,97 @@
 
 const m = new Minesweeper("#game", 99, 30, 18);
 
-m.setHighScores([
-	{ name: "Test", score: 123 },
-	{ name: "Test", score: 234 },
-	{ name: "Test", score: 345 },
-	{ name: "Test", score: 456 },
-	{ name: "Test", score: 5999 },
-]);
+m.setHighScores([]);
+
+const scoreKey = `${m.cols}x${m.rows}:${m.mines}`;
+
+const scoresReady = openScoreDatabase().then(async (database) => {
+	const scores = await updateStoredScores(database);
+
+	m.setHighScores(scores.concat(m.highScores));
+
+	return database;
+}).catch((error) => {
+	console.warn("Best times are only available for this session.", error);
+
+	return null;
+});
+
+m.on("gameWon", async () => {
+	const score = m.getScore();
+
+	if (score === false) {
+		return;
+	}
+
+	const highScore = { name: "You", score: score };
+
+	m.highScores.push(highScore);
+
+	m.setHighScores(m.highScores);
+
+	const database = await scoresReady;
+
+	if (database) {
+		try {
+			await updateStoredScores(database, highScore);
+		} catch (error) {
+			console.warn("Could not save this best time.", error);
+		}
+	}
+});
+
+function openScoreDatabase() {
+	return new Promise((resolve, reject) => {
+		const request = indexedDB.open("minesweeper", 1);
+
+		request.onupgradeneeded = () => {
+			request.result.createObjectStore("best-times");
+		};
+
+		request.onsuccess = () => {
+			const database = request.result;
+
+			database.onversionchange = () => {
+				database.close();
+			};
+
+			resolve(database);
+		};
+
+		request.onerror = () => {
+			reject(request.error);
+		};
+	});
+}
+
+function updateStoredScores(database, highScore) {
+	return new Promise((resolve, reject) => {
+		const transaction = database.transaction("best-times", highScore ? "readwrite" : "readonly"),
+			store = transaction.objectStore("best-times"),
+			request = store.get(scoreKey);
+
+		let scores = [];
+
+		request.onsuccess = () => {
+			scores = request.result || [];
+
+			if (highScore) {
+				scores.push(highScore);
+				scores.sort((first, second) => first.score - second.score);
+
+				scores = scores.slice(0, 5);
+
+				store.put(scores, scoreKey);
+			}
+		};
+
+		transaction.oncomplete = () => {
+			resolve(scores);
+		};
+
+		transaction.onabort = () => {
+			reject(transaction.error);
+		};
+	});
+}
