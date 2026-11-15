@@ -15,17 +15,36 @@
 			<header class="game-header">
 				<h1>minesweeper<span class="title-dot" aria-hidden="true">.</span></h1>
 
-				<span class="mine-count" aria-label="99 mines" title="99 mines">
+				<span class="game-timer" title="Elapsed time">
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
-						<circle cx="12" cy="12" r="5" />
-						<path d="M12 3v4m0 10v4M3 12h4m10 0h4M5.6 5.6l2.9 2.9m7 7 2.9 2.9M5.6 18.4l2.9-2.9m7-7 2.9-2.9" />
+						<circle cx="12" cy="12" r="8" />
+						<path d="M12 7v5l3 2" />
 					</svg>
-					99
+					<span id="game-timer" role="timer" aria-label="Elapsed time">00:00</span>
 				</span>
 			</header>
 
 			<div class="game-board">
-				<canvas id="game" aria-label="Minesweeper board. Left-click to reveal a cell, right-click to flag. Click after a game ends to restart.">Your browser needs canvas support to play Minesweeper.</canvas>
+				<canvas id="game" tabindex="-1" aria-label="Minesweeper board. Left-click to reveal a cell, right-click to flag. Click after a game ends to restart.">Your browser needs canvas support to play Minesweeper.</canvas>
+				<section class="game-result" aria-labelledby="result-title" hidden>
+					<div class="result-card">
+						<svg class="result-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+							<path id="result-symbol" d="M7 7l10 10M17 7 7 17" />
+						</svg>
+						<h2 id="result-title" role="status"></h2>
+						<p class="result-time" aria-label="Final time"></p>
+						<button class="replay-button" type="button">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+								<path d="M4 10a8 8 0 1 1 1 7M4 4v6h6" />
+							</svg>
+							Play again
+						</button>
+						<details class="result-scores" hidden>
+							<summary>Best times</summary>
+							<ol class="score-list"></ol>
+						</details>
+					</div>
+				</section>
 			</div>
 		</main>
 

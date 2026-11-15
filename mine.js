@@ -153,6 +153,14 @@
 		constructor(pTarget, pMines, pCols, pRows) {
 			this.target = document.querySelector(pTarget);
 			this.ctx = this.target.getContext("2d");
+			this.board = this.target.closest(".game-board");
+			this.timer = document.querySelector("#game-timer");
+			this.result = this.board.querySelector(".game-result");
+			this.resultTitle = this.result.querySelector("#result-title");
+			this.resultTime = this.result.querySelector(".result-time");
+			this.resultSymbol = this.result.querySelector("#result-symbol");
+			this.resultScores = this.result.querySelector(".result-scores");
+			this.scoreList = this.result.querySelector(".score-list");
 
 			// pixel art pog
 			this.target.style.imageRendering = "pixelated";
@@ -172,18 +180,23 @@
 			this.started = false;
 
 			this.restart();
-
-			new FontFace("Kode Mono", "url(https://fonts.gstatic.com/s/kodemono/v1/A2BLn5pb0QgtVEPFnlYkkaoBgw4qv9odq6uyxDOZadW2.woff2)") // 400
-				.load()
-				.then((pFont) => document.fonts.add(pFont));
-
-			new FontFace("Kode Mono", "url(https://fonts.gstatic.com/s/kodemono/v1/A2BLn5pb0QgtVEPFnlYkkaoBgw4qv9odq6uyxD2ZaQ.woff2)") // 500
-				.load()
-				.then((pFont) => document.fonts.add(pFont));
 		}
 
 		setHighScores(pHighScores) {
 			this.highScores = pHighScores.sort((pA, pB) => pA.score - pB.score).slice(0, 5);
+			this.scoreList.replaceChildren();
+			this.resultScores.hidden = this.highScores.length === 0;
+
+			for (const highScore of this.highScores) {
+				const row = document.createElement("li");
+				const name = document.createElement("span");
+				const time = document.createElement("span");
+
+				name.textContent = highScore.name.substring(0, 20);
+				time.textContent = this._formatScore(highScore.score);
+				row.append(name, time);
+				this.scoreList.append(row);
+			}
 
 			this._draw();
 		}
@@ -193,7 +206,7 @@
 				return false;
 			}
 
-			const time = Math.floor((Date.now() - this.started) / 1000);
+			const time = Math.floor(((this.finishedAt || Date.now()) - this.started) / 1000);
 
 			if (time >= 6000) {
 				return false;
@@ -220,6 +233,12 @@
 			this.grid = [];
 
 			this.started = false;
+			this.finishedAt = false;
+			this.resultScores.open = false;
+
+			if (this.result.contains(document.activeElement)) {
+				this.target.focus({ preventScroll: true });
+			}
 
 			this.gameWon = false;
 			this.gameOver = false;
@@ -281,6 +300,14 @@
 			}
 
 			this._events = true;
+
+			this.result.addEventListener("click", (event) => {
+				if (event.target.closest("details")) {
+					return;
+				}
+
+				this.restart();
+			});
 
 			// Left Click
 			this.on("click", (e) => {
@@ -367,6 +394,7 @@
 			}
 
 			this.gameOver = true;
+			this.finishedAt = Date.now();
 
 			this.hoveredX = false;
 			this.hoveredY = false;
@@ -390,6 +418,7 @@
 			this.gameWon = !this._find((pCell) => pCell.mine && !pCell.flag);
 
 			if (this.gameWon) {
+				this.finishedAt = Date.now();
 				this.hoveredX = false;
 				this.hoveredY = false;
 
@@ -407,28 +436,27 @@
 			const minutes = Math.floor(pScore / 60),
 				seconds = pScore % 60;
 
-			return Math.min(minutes, 99).toString().padStart(2, "0") + ":" + seconds.toString().padStart(2, "0");
+			return `${Math.min(minutes, 99).toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
 		}
 
-		_drawScore() {
+		_drawStatus() {
 			const score = this.getScore();
+			const formatted = score === false ? (this.started ? "--:--" : "00:00") : this._formatScore(score);
+			const finished = this.gameOver || this.gameWon;
 
-			if (score === false) {
-				return;
+			if (this.timer.textContent !== formatted) {
+				this.timer.textContent = formatted;
 			}
 
-			const text = this._textSize("text"),
-				padding = text / 2;
+			if (finished && this.result.hidden) {
+				this.result.dataset.state = this.gameWon ? "won" : "lost";
+				this.resultTitle.textContent = this.gameWon ? "Field cleared" : "Mine hit";
+				this.resultTime.textContent = formatted;
+				this.resultSymbol.setAttribute("d", this.gameWon ? "M5 12l4 4L19 6" : "M7 7l10 10M17 7 7 17");
+			}
 
-			this.ctx.shadowColor = "#000000";
-			this.ctx.shadowBlur = text / 2;
-
-			this.ctx.fillStyle = "#ffffff";
-			this.ctx.font = `400 ${text}px "Kode Mono"`;
-			this.ctx.textAlign = "right";
-			this.ctx.textBaseline = "top";
-
-			this.ctx.fillText(this._formatScore(score), this.target.width - padding, padding);
+			this.result.hidden = !finished;
+			this.board.classList.toggle("is-finished", finished);
 		}
 
 		_scale() {
@@ -444,21 +472,6 @@
 			return min / TILE;
 		}
 
-		_textSize(pType) {
-			const height = this.target.height;
-
-			switch (pType) {
-				case "title":
-					return Math.floor(height / 14);
-				case "subtitle":
-					return Math.floor(height / 24);
-				case "text":
-					return Math.floor(height / 32);
-			}
-
-			return 0;
-		}
-
 		_draw() {
 			const scale = this._scale(),
 				width = this.target.width,
@@ -468,11 +481,6 @@
 
 			this.ctx.clearRect(0, 0, width, height);
 
-			// If game is over or won, slightly blur the background
-			if (this.gameOver || this.gameWon) {
-				this.ctx.filter = "blur(3px)";
-			}
-
 			// Draw cells
 			this._iterate((pCell) => {
 				pCell._draw(this, this.ctx, TILE * scale);
@@ -480,65 +488,6 @@
 
 			if (this.gameOver || this.gameWon) {
 				clearInterval(this.interval);
-
-				// Remove blur
-				this.ctx.filter = "none";
-
-				// Text sizes and positions
-				const title = this._textSize("title"),
-					subtitle = this._textSize("subtitle"),
-					text = this._textSize("text");
-
-				let x = scale * 4,
-					y = scale * 4;
-
-				// Darken background
-				this.ctx.fillStyle = "rgba(10, 14, 17, 0.65)";
-				this.ctx.fillRect(0, 0, width, height);
-
-				// Text shadow
-				this.ctx.shadowColor = "#000000";
-				this.ctx.shadowBlur = title / 2;
-
-				// Title
-				this.ctx.fillStyle = "#ffffff";
-				this.ctx.font = `500 ${title}px "Kode Mono"`;
-				this.ctx.textAlign = "left";
-				this.ctx.textBaseline = "top";
-
-				this.ctx.fillText(this.gameWon ? "You Won" : "Game Over", x, y);
-
-				y += title * 1.2;
-
-				// Update shadow size
-				this.ctx.shadowBlur = subtitle / 2;
-
-				// Subtitle
-				this.ctx.font = `400 ${subtitle}px "Kode Mono"`;
-
-				this.ctx.fillText("Click to start a new game", x, y);
-
-				y += subtitle * 3;
-
-				// High-scores
-				if (this.highScores) {
-					this.ctx.font = `500 ${subtitle}px "Kode Mono"`;
-
-					this.ctx.fillText("Best times", x, y);
-
-					y += subtitle * 1.5;
-
-					this.highScores.forEach((pScore) => {
-						const name = pScore.name.substring(0, 20),
-							score = this._formatScore(pScore.score);
-
-						this.ctx.font = `400 ${text}px "Kode Mono"`;
-
-						this.ctx.fillText(`${score} - ${name}`, x, y);
-
-						y += text * 1.5;
-					});
-				}
 			} else {
 				// Draw hovered cell
 				if (this.hoveredX !== false && this.hoveredY !== false) {
@@ -551,7 +500,7 @@
 				}
 			}
 
-			this._drawScore();
+			this._drawStatus();
 		}
 
 		_pos(pEvent) {
